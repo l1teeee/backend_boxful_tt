@@ -1,8 +1,8 @@
 import { Injectable, ConflictException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { JwtService } from '@nestjs/jwt';
 import { RegisterDto } from './dto/register.dto';
 import * as bcrypt from 'bcrypt';
-import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class AuthService {
@@ -52,14 +52,10 @@ export class AuthService {
                 },
             });
 
-            // Generar JWT token
-            const payload = { sub: user.id, email: user.email };
-            const token = this.jwtService.sign(payload);
-
+            // REGISTRO: Solo retornar mensaje de éxito y datos del usuario, SIN TOKEN
             return {
                 message: 'Usuario registrado exitosamente',
                 user,
-                token,
             };
         } catch (error) {
             throw new BadRequestException('Error al crear el usuario');
@@ -83,10 +79,15 @@ export class AuthService {
             throw new BadRequestException('Credenciales inválidas');
         }
 
-        // Generar JWT token
-        const payload = { sub: user.id, email: user.email };
+        // Generar JWT token SOLO en login
+        const payload = {
+            sub: user.id,
+            email: user.email,
+            nombre: user.nombre
+        };
         const token = this.jwtService.sign(payload);
 
+        // LOGIN: Retornar mensaje, datos del usuario Y TOKEN
         return {
             message: 'Inicio de sesión exitoso',
             user: {
@@ -98,7 +99,7 @@ export class AuthService {
                 fechaNacimiento: user.fechaNacimiento,
                 telefono: user.telefono,
             },
-            token,
+            token, // Token JWT solo en login
         };
     }
 }
